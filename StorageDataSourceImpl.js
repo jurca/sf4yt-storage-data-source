@@ -5,6 +5,8 @@ import AccountState from 'sf4yt-storage/model/AccountState'
 import type { Playlist } from 'sf4yt-storage/model/Playlist'
 import type { StorageDataSource } from 'sf4yt-storage/StorageDataSource'
 import type { Subscription } from 'sf4yt-storage/model/Subscription'
+import SubscriptionState from 'sf4yt-storage/model/SubscriptionState'
+import SubscriptionType from 'sf4yt-storage/model/SubscriptionType'
 import type { Video } from 'sf4yt-storage/model/Video'
 import YouTubeApiClient from 'sf4yt-gapi-client/es2015/YouTubeApiClient'
 
@@ -59,7 +61,22 @@ export default class StorageDataSourceImpl {
     }
   }
 
-  async fetchSubscriptions(account: Account): Promise<Array<Subscription>> {}
+  async fetchSubscriptions(account: Account): Promise<Array<Subscription>> {
+    let subscriptions = await this._apiClient.getSubscribedChannels(
+      account.channel.id
+    )
+
+    return subscriptions.map(subscribedChannel => ({
+      id: undefined,
+      type: SubscriptionType.CHANNEL,
+      playlist: {}, // TODO
+      channel: {}, // TODO
+      state: SubscriptionState.ACTIVE,
+      lastError: undefined,
+      account: account,
+      isIncognito: false
+    }))
+  }
 
   async fetchPlaylistUpdates(
     playlists: Array<Playlist>
