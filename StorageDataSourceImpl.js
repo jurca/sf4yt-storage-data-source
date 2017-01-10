@@ -66,11 +66,33 @@ export default class StorageDataSourceImpl {
       account.channel.id
     )
 
+    let uploadsPlaylistIds = await this._apiClient.getUploadsPlaylistIds(
+        subscriptions.map(subscribedChannel => subscribedChannel.id)
+    )
+    let uploadsPlaylists = await this._apiClient.getPlaylists(
+        uploadsPlaylistIds.map(playlistInfo => playlistInfo.uploadsPlaylistId)
+    )
+    let playlistsMap = new Map()
+    for (let playlist of uploadsPlaylists) {
+      playlistsMap.set(playlist.channelId, {
+        id: playlist.id,
+        title: playlist.title,
+        description: playlist.description,
+        videoCount: playlist.videoCount,
+        thumbnails: playlist.thumbnails
+      })
+    }
+
     return subscriptions.map(subscribedChannel => ({
       id: undefined,
       type: SubscriptionType.CHANNEL,
-      playlist: {}, // TODO
-      channel: {}, // TODO
+      playlist: playlistsMap.get(subscribedChannel.id),
+      channel: {
+        id: subscribedChannel.id,
+        title: subscribedChannel.title,
+        thumbnails: subscribedChannel.thumbnails,
+        uploadsPlaylist: playlistsMap.get(subscribedChannel.id)
+      },
       state: SubscriptionState.ACTIVE,
       lastError: undefined,
       account: account,
