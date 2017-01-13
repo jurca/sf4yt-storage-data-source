@@ -102,7 +102,41 @@ export default class StorageDataSourceImpl {
 
   async fetchPlaylistUpdates(
     playlists: Array<Playlist>
-  ): Promise<Array<Playlist>> {}
+  ): Promise<Array<Playlist>> {
+    let fetchedPlaylists = await this._apiClient.getPlaylists(
+      playlists.map(playlist => playlist.id)
+    )
+
+    let playlistMap = new Map(playlists.map(
+        playlist => [playlist.id, playlist]
+    ))
+    let updatedPlaylists = []
+
+    for (let playlist of fetchedPlaylists) {
+      let sourcePlaylist: ?Playlist = playlistMap.get(playlist.id)
+      if (!sourcePlaylist) {
+        // this will (should) never happen, but flow complains otherwise
+        continue
+      }
+
+      let thumbnails = playlist.thumbnails
+      let sourceThumbnails = sourcePlaylist.thumbnails
+      if (
+        playlist.title !== sourcePlaylist.title ||
+        playlist.description !== sourcePlaylist.description ||
+        JSON.stringify(thumbnails) !== JSON.stringify(sourceThumbnails) ||
+        playlist.videoCount !== sourcePlaylist.videoCount
+      ) {
+        sourcePlaylist.title = playlist.title
+        sourcePlaylist.description = playlist.description
+        sourcePlaylist.thumbnails = playlist.thumbnails
+        sourcePlaylist.videoCount = playlist.videoCount
+        updatedPlaylists.push(sourcePlaylist)
+      }
+    }
+
+    return updatedPlaylists
+  }
 
   async fetchVideos(
       playlist: Playlist,
