@@ -139,9 +139,66 @@ export default class StorageDataSourceImpl {
   }
 
   async fetchVideos(
-      playlist: Playlist,
-      shouldContinue: (videos: Array<Video>) => boolean
-  ): Promise<Array<Video>> {}
+    playlist: Playlist,
+    shouldContinue: (videos: Array<Video>) => boolean
+  ): Promise<Array<Video>> {
+    let raw = await this._apiClient.getPlaylistVideos(playlist.id, batch => {
+      return shouldContinue(batch.map(createVideo))
+    })
+
+    let videos = raw.map(createVideo)
+    let channelsMap = new Map(videos.map(video => [video.channel.id, null]))
+    for (let channelId of channelsMap.keys()) {
+      let channel = await this._apiClient.getChannelInfo(channelId)
+      let uploadsPlaylist
+      if (channel.uploadsPlaylistId === playlist.id) {
+        uploadsPlaylist = playlist
+      } else {
+        uploadsPlaylist = await this._apiClient.getPlaylistInfo(
+          channel.uploadsPlaylistId
+        )
+      }
+      channelsMap.set(channelId, {
+        id: channel.id,
+        title: channel.title,
+        thumbnails: channel.thumbnails,
+        uploadsPlaylist: {
+          id: playlist.id,
+          title: playlist.title,
+          description: playlist.description,
+          videoCount: playlist.videoCount,
+          thumbnails: playlist.thumbnails
+        }
+      })
+    }
+    for (let video of videos) {
+      video.channel = channelsMap.get(video.channel.id)
+    }
+
+    return videos
+
+    function createVideo(fetchedVideo): Video {
+      let emptyThumbnails: {[label: string]: string} = {}
+
+      return {
+        id: fetchedVideo.id,
+        title: fetchedVideo.title,
+        description: fetchedVideo.description,
+        publishedAt: fetchedVideo.publishedAt,
+        thumbnails: fetchedVideo.thumbnails,
+        duration: -1,
+        viewCount: -1,
+        channel: {
+          id: fetchedVideo.channelId,
+          title: '',
+          thumbnails: emptyThumbnails,
+          uploadsPlaylist: playlist
+        },
+        watched: false,
+        lastUpdate: new Date()
+      }
+    }
+  }
 
   async fetchViewCountUpdates(videos: Array<Video>): Promise<Array<Video>> {}
 }
