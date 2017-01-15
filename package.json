@@ -2,7 +2,8 @@
   "name": "sf4yt-storage-data-source",
   "version": "0.0.0",
   "description": "Implementation of the StorageDataSource interface for the Subscription Feed for YouTube",
-  "main": "index.js",
+  "private": true,
+  "main": "StorageDataSourceImpl.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -31,7 +32,7 @@
   },
   "dependencies": {
     "sf4yt-gapi-client": "github:jurca/sf4yt-gapi-client#0.8.0",
-    "sf4yt-storage": "github:jurca/sf4yt-storage#0.1.1"
+    "sf4yt-storage": "github:jurca/sf4yt-storage#0.2.0"
   },
   "devDependencies": {
     "flow-bin": "0.37.4"
