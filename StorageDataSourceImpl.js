@@ -296,7 +296,29 @@ export default class StorageDataSourceImpl {
     }
   }
 
-  async fetchViewCountUpdates(videos: Array<Video>): Promise<Array<Video>> {}
+  async fetchViewCountUpdates(videos: Array<Video>): Promise<Array<Video>> {
+    let videosMap = new Map(videos.map(video => [video.id, video]))
+    let videosIds = Array.from(videosMap.keys())
+
+    let updatedVideos = []
+    let stats = await this._apiClient.getVideosMetaData(videosIds)
+    for (let videoStat of stats) {
+      let video = videosMap.get(videoStat.id)
+      if (
+        !video ||
+        video.viewCount === videoStat.viewCount ||
+        video.duration === videoStat.duration
+      ) {
+        continue
+      }
+
+      video.viewCount = videoStat.viewCount
+      video.duration = videoStat.duration
+      updatedVideos.push(video)
+    }
+
+    return updatedVideos
+  }
 }
 
 let implementsCheck: Class<StorageDataSource> = StorageDataSourceImpl
