@@ -19,6 +19,24 @@ export default class StorageDataSourceImpl {
     Object.freeze(this)
   }
 
+  async resolveCurrentAccount(): Promise<Account> {
+    let currentAccountId = await new Promise((resolve, reject) => {
+      window.chrome.identity.getProfileUserInfo(({ id }) => {
+        if (window.chrome.runtime.lastError) {
+          reject(new Error(window.chrome.runtime.lastError.message))
+        } else {
+          resolve(id)
+        }
+      })
+    })
+
+    if (!currentAccountId) {
+      throw new Error('There is no user currently signed into the browser')
+    }
+
+    return await this.resolveAccount(currentAccountId)
+  }
+
   async resolveAccount(accountId: string): Promise<Account> {
     let currentId = await new Promise((resolve, reject) => {
       window.chrome.identity.getProfileUserInfo(({ id }) => {
@@ -84,7 +102,6 @@ export default class StorageDataSourceImpl {
     }
 
     return subscriptions.map(subscribedChannel => ({
-      id: undefined,
       type: SubscriptionType.CHANNEL,
       playlist: playlistsMap.get(subscribedChannel.id),
       channel: {
@@ -99,6 +116,14 @@ export default class StorageDataSourceImpl {
       isIncognito: false
     }))
   }
+
+  async resolveIncognitoChannelSubscription(
+    channelId: string
+  ): Promise<Subscription> {}
+
+  async resolveIncognitoPlaylistSubscription(
+    playlistId: string
+  ): Promise<Subscription> {}
 
   async fetchPlaylistUpdates(
     playlists: Array<Playlist>
