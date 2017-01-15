@@ -119,11 +119,82 @@ export default class StorageDataSourceImpl {
 
   async resolveIncognitoChannelSubscription(
     channelId: string
-  ): Promise<Subscription> {}
+  ): Promise<Subscription> {
+    let channel = await this._apiClient.getChannelInfo(channelId)
+    let uploadsPlaylistData = await this._apiClient.getPlaylistInfo(
+      channel.uploadsPlaylistId
+    )
+    let uploadsPlaylist = {
+      id: uploadsPlaylistData.id,
+      title: uploadsPlaylistData.title,
+      description: uploadsPlaylistData.description,
+      videoCount: uploadsPlaylistData.videoCount,
+      thumbnails: uploadsPlaylistData.thumbnails
+    }
+
+    return {
+      type: SubscriptionType.CHANNEL,
+      playlist: uploadsPlaylist,
+      channel: {
+        id: channel.id,
+        title: channel.title,
+        thumbnails: channel.thumbnails,
+        uploadsPlaylist
+      },
+      state: SubscriptionState.ACTIVE,
+      lastError: undefined,
+      account: undefined,
+      isIncognito: true
+    }
+  }
 
   async resolveIncognitoPlaylistSubscription(
     playlistId: string
-  ): Promise<Subscription> {}
+  ): Promise<Subscription> {
+    let playlistData = await this._apiClient.getPlaylistInfo(playlistId)
+    let channelData = await this._apiClient.getChannelInfo(
+      playlistData.channelId
+    )
+
+    let playlist = {
+      id: playlistData.id,
+      title: playlistData.title,
+      description: playlistData.description,
+      videoCount: playlistData.videoCount,
+      thumbnails: playlistData.thumbnails
+    }
+
+    let uploadsPlaylist
+    if (channelData.uploadsPlaylistId === playlistId) {
+      uploadsPlaylist = playlist
+    } else {
+      let uploadsPlaylistData = await this._apiClient.getPlaylistInfo(
+        channelData.uploadsPlaylistId
+      )
+      uploadsPlaylist = {
+        id: uploadsPlaylistData.id,
+        title: uploadsPlaylistData.title,
+        description: uploadsPlaylistData.description,
+        videoCount: uploadsPlaylistData.videoCount,
+        thumbnails: uploadsPlaylistData.thumbnails
+      }
+    }
+
+    return {
+      type: SubscriptionType.PLAYLIST,
+      playlist,
+      channel: {
+        id: channelData.id,
+        title: channelData.title,
+        thumbnails: channelData.thumbnails,
+        uploadsPlaylist
+      },
+      state: SubscriptionState.ACTIVE,
+      lastError: undefined,
+      account: undefined,
+      isIncognito: true
+    }
+  }
 
   async fetchPlaylistUpdates(
     playlists: Array<Playlist>
