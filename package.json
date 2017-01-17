@@ -31,8 +31,10 @@
     ]
   },
   "dependencies": {
-    "sf4yt-gapi-client": "github:jurca/sf4yt-gapi-client#0.8.0",
     "sf4yt-storage": "github:jurca/sf4yt-storage#0.2.0"
+  },
+  "peerDependencies": {
+    "sf4yt-gapi-client": "github:jurca/sf4yt-gapi-client#0.8.0"
   },
   "devDependencies": {
     "flow-bin": "0.37.4"
