@@ -1,6 +1,6 @@
 {
   "name": "sf4yt-storage-data-source",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Implementation of the StorageDataSource interface for the Subscription Feed for YouTube",
   "private": true,
   "main": "StorageDataSourceImpl.js",
